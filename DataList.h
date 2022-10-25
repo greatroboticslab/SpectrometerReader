@@ -18,7 +18,7 @@ public:
 	void DisplayLines();
 	std::string GetLine(int);
 	void SaveRawData();
-	MeasurementData FormMeasurement(unsigned int, float, std::string, std::string);
+	MeasurementData FormMeasurement(unsigned int, float, std::string, std::string, bool);
 	void ReadInPixels(uint16_t * pixels, uint16_t pixelAmount);
 	
 private:

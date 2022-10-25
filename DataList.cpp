@@ -6,11 +6,12 @@ DataList::DataList() {
 	
 }
 
-MeasurementData DataList::FormMeasurement(unsigned int id, float weight, std::string subject, std::string subtype) {
+MeasurementData DataList::FormMeasurement(unsigned int id, float weight, std::string subject, std::string subtype, bool healthy) {
 	mDataBuffer.id = id;
 	mDataBuffer.weight = weight;
 	mDataBuffer.subject = subject;
 	mDataBuffer.subtype = subtype;
+	mDataBuffer.healthy = healthy;
 	
 	mDataBuffer.waves = waves;
 	

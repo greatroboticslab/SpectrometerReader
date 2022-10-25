@@ -56,18 +56,27 @@ void ReadData(uint8_t*);
 
 unsigned int ReadID();
 
-MeasurementData MakeReading(unsigned int &id, DataList &dataList, std::string subject);
+MeasurementData MakeReading(unsigned int &id, DataList &dataList, std::string subject, bool, bool);
 
 void SaveMeasurement(MeasurementData &mData, bool);
 
 void SaveID(unsigned int);
 
+bool DeviceCheck();
+
 unsigned char statusFlags;
 unsigned short framesInMemory;
 DeviceInfo_t * device;
 
+std::string currentSubject, currentSubtype;
+float currentWavelength, currentThreshold;
 
-int main() {
+bool deviceConnected = false;
+bool currentHealthy = false;
+
+void DisplayHelp(bool);
+
+int main(int argc, char **argv) {
 	
 	unsigned int currentID = ReadID();
 	
@@ -81,54 +90,213 @@ int main() {
 	
 	//PUT STUFF AFTER LOADING DLL
 	
-	
-	
-	
-	
-	
+	/*
 	if(getDeviceCount() == 0) {
 		std::cout << "No spectrometer detected! Try running again after pluggin in the spectrometer." << std::endl;
 		return ERROR_NOT_CONNECTED;
 	}
-	connectToDeviceByIndex(0);
+	*/
+	//connectToDeviceByIndex(0);
 	
-	std::string userInput;
-	while(userInput != "quit") {
-		
-		std::cin >> userInput;
-		
-		if(userInput == "write") {
+	
+	if(argc <= 1) {
+	
+		//User input terminal
+		std::string userInput;
+		while(userInput != "quit") {
 			
-			MakeReading(currentID, dataList, "worm");
-			dataList.SaveRawData();
+			
+			
+			std::cin >> userInput;
+			
+			
+			//Make a reading and save it
+			if(userInput == "read") {
+				
+				if(DeviceCheck()) {
+					MakeReading(currentID, dataList, currentSubject, true, true);
+					dataList.SaveRawData();
+				}
+				
+			}
+			//Build reference files
+			else if(userInput == "build") {
+				DataAnalyzer dataAnalyzer;
+				dataAnalyzer.BuildData();
+			}
+			//Make a reading and find the closest measurement
+			else if(userInput == "compare") {
+				if(DeviceCheck()) {
+					MeasurementData temp = MakeReading(currentID, dataList, "temp", false, false);
+					DataComparison comparitor;
+					comparitor.CompareData(temp, currentThreshold);
+				}
+				
+			}
+			//Set wavelength
+			else if(userInput == "wavelength") {
+				
+				std::cout << "Enter current wavelength (nm): ";
+				std::cin >> currentWavelength;
+				
+			}
+			//Set subject
+			else if(userInput == "subject") {
+				
+				std::cout << "Enter the name of the subject: ";
+				std::cin >> currentSubject;
+				
+			}
+			//Set threshold
+			else if(userInput == "threshold") {
+				
+				std::cout << "Set threshold of wavelength (nm): ";
+				std::cin >> currentThreshold;
+				
+			}
+			else if(userInput == "status") {
+				
+				if(DeviceCheck()) {
+					
+					DeviceInfo_t * devices = getDevicesInfo();
 		
+					std::cout << "There are: " << getDeviceCount() << " spectrometers connected!" << std::endl;
+					std::cout << "Status: " << (int)statusFlags << "." << std::endl;
+					std::cout << "Serial number: " << devices->R << std::endl;
+					
+				}
+				
+			}
+			//Debug read reference file
+			else if(userInput == "bread") {
+				
+				MeasurementData *mData;
+				int count;
+				DataReader reader;
+				reader.ReadReference("BuiltData/worm.dat", mData, count);
+				
+				std::cout << "The reference has " << count << " entries." << std::endl;
+				
+			}
+			else {
+				
+				if(userInput != "quit") {
+					DisplayHelp(false);
+				}
+				
+			}
+			
 		}
-		else if(userInput == "read") {
-			//dataReader.ReadDataFile("11_worm.dat");
-			//DOES NOT DISPLAY AND REQUIRES POINTER BRO
+	}
+	
+	//Use from command line
+	
+	
+	else {
+		bool makeReading = false;
+		bool buildData = false;
+		bool compareData = false;
+		//std::cout << "USING COMMANDS" << std::endl;
+		
+		int c = 1;
+		
+		while(c < argc) {
+			
+			//std::cout << argv[c] << std::endl;
+			
+			if(strcmp(argv[c], "-subject") == 0) {
+				
+				
+				
+				c++;
+				currentSubject = argv[c];
+				
+				std::cout << "CURRENT SUBJECT " << currentSubject << std::endl;
+				
+			}
+			
+			else if(strcmp(argv[c], "-wavelength") == 0) {
+				
+				c++;
+				currentWavelength = std::stof(argv[c]);
+				
+			}
+			else if(strcmp(argv[c], "-threshold") == 0) {
+				
+				c++;
+				currentThreshold = std::stof(argv[c]);
+				
+			}
+			else if(strcmp(argv[c], "-health") == 0 || strcmp(argv[c], "-healthy") == 0) {
+				c++;
+				if(strcmp(argv[c], "y") == 0 || strcmp(argv[c], "Y") == 0 || strcmp(argv[c], "1") == 0 || strcmp(argv[c], "yes") == 0 || strcmp(argv[c], "true") == 0) {
+					
+					currentHealthy = true;
+					
+				}
+				else {
+					currentHealthy = false;
+				}
+			}
+			else if(strcmp(argv[c], "-subtype") == 0) {
+				c++;
+				currentSubtype = argv[c];
+			}
+			else if(strcmp(argv[c], "-read") == 0) {
+				
+				makeReading = true;
+				
+			}
+			else if(strcmp(argv[c], "-build") == 0) {
+				
+				buildData = true;
+				
+			}
+			else if(strcmp(argv[c], "-compare") == 0) {
+				
+				compareData = true;
+				
+			}
+			else {
+				
+				DisplayHelp(true);
+				return -1;
+				
+			}
+			
+			c++;
+			
 		}
-		else if(userInput == "build") {
+		
+		if(makeReading) {
+			
+			if(DeviceCheck()) {
+				MakeReading(currentID, dataList, currentSubject, false, true);
+				dataList.SaveRawData();
+			}
+			
+		}
+		if(buildData) {
+			
 			DataAnalyzer dataAnalyzer;
 			dataAnalyzer.BuildData();
-		}
-		else if(userInput == "compare") {
-			MeasurementData temp = MakeReading(currentID, dataList, "worm");
-			DataComparison comparitor;
-			int s;
-			comparitor.CompareData(temp, temp.subject, s);
 			
-			std::cout << "The reading has a similarity reading of: " << s << std::endl;
+		}
+		
+		if(compareData) {
+			
+			if(DeviceCheck()) {
+				MeasurementData temp = MakeReading(currentID, dataList, "temp", false, false);
+				DataComparison comparitor;
+				comparitor.CompareData(temp, currentThreshold);
+			}
 			
 		}
 		
 	}
 	
 	getStatus(&statusFlags, &framesInMemory);
-	DeviceInfo_t * devices = getDevicesInfo();
 	
-	std::cout << "There are: " << getDeviceCount() << " spectrometers connected!" << std::endl;
-	std::cout << "Status: " << (int)statusFlags << "." << std::endl;
-	std::cout << "Serial number: " << devices->R << std::endl;
 	
 	//Reset parameters
 	resetDevice();
@@ -151,12 +319,9 @@ void SaveID(unsigned int id) {
 
 
 //Create new reading entry
-MeasurementData MakeReading(unsigned int &id, DataList &dataList, std::string subject) {
+MeasurementData MakeReading(unsigned int &id, DataList &dataList, std::string subject,bool askForArgs, bool save) {
 	
-	if(getDeviceCount() == 0) {
-		std::cout << "There are no spectrometers plugged in. Please plug one in and try again." << std::endl;
-	}
-	else {
+	if(DeviceCheck()) {
 		
 		resetDevice();
 		
@@ -189,7 +354,7 @@ MeasurementData MakeReading(unsigned int &id, DataList &dataList, std::string su
 		
 		
 		getStatus(&statusFlags, &framesInMemory);
-		std::cout << "Frames: " << framesInMemory << std::endl;
+		//std::cout << "Frames: " << framesInMemory << std::endl;
 		
 		uint8_t * allBytes = (uint8_t*)calloc(MAX_BYTES, sizeof(uint8_t));
 		//int result = triggerAcquisition();
@@ -206,20 +371,69 @@ MeasurementData MakeReading(unsigned int &id, DataList &dataList, std::string su
 		float weight;
 		std::string subtype;
 		
-		std::cout << "Enter the age (young/mature): ";
-		std::cin >> subtype;
-		std::cout << "From a scale of 1-100, how healthy is the plant? ";
-		std::cin >> weight;
-		weight /= 100.0;
+		subtype = currentSubtype;
 		
-		MeasurementData mData = (dataList.FormMeasurement(id, weight, subject, subtype));
-		SaveMeasurement(mData, true);
+		if(askForArgs) {
+		
+			std::cout << "Enter the age (young/mature): ";
+			std::cin >> subtype;
+		
+		}
+		//std::cout << "From a scale of 1-100, how healthy is the plant? ";
+		//std::cin >> weight;
+		//weight /= 100.0;
+		
+		weight = currentWavelength;
+		
+		bool healthy = currentHealthy;
+		
+		if(askForArgs) {
+		
+			std::cout << "Is this subject healthy? (y/n): ";
+			std::string yn;
+			std::cin >> yn;
+			if(yn == "y" || yn == "Y") {
+				
+				healthy = true;
+				
+			}
+		}
+		
+		
+		
+		MeasurementData mData = (dataList.FormMeasurement(id, weight, subject, subtype, healthy));
+		
+		if(save) {
+			MeasurementSaver measurementSaver;
+			measurementSaver.SaveMeasurement(mData, true);
+		}
 		
 		id++;
 		SaveID(id);
 		
 		return mData;
 	}
+	
+}
+
+bool DeviceCheck() {
+	
+	if(getDeviceCount() == 0) {
+			deviceConnected = false;
+	}
+	else {
+		if(!deviceConnected) {
+			connectToDeviceByIndex(0);
+			deviceConnected = true;
+		}
+	
+	}
+	
+	if(deviceConnected) {
+		return true;
+	}
+	std::cout << "There are no spectrometers plugged in. Please plug one in and try again." << std::endl;
+	return false;
 	
 }
 
@@ -343,4 +557,35 @@ bool LoadDLL() {
 	getFrame = (_getFrame)GetProcAddress(hinst, "getFrame");
 	
 	return true;
+}
+
+//Show help screen
+void DisplayHelp(bool commandLine) {
+	
+	if(commandLine) {
+		std::cout << "Usage:" << std::endl;
+		std::cout << "-subject <string>		Sets the name of the subject." << std::endl;
+		std::cout << "-subtype <string>		Sets the subtype of the subject (a string)." << std::endl;
+		std::cout << "-wavelength <float>		Sets the wavelength that this measurement was using." << std::endl;
+		std::cout << "-healthy <true/false>		Is the subject healthy?" << std::endl;
+		std::cout << "-read		Take a measurement using the set parameters, and save it to Data/<id>_<subject>.dat" << std::endl;
+		std::cout << "-build		Build all of the .dat files in /Data/ into reference files in /BuiltData/" << std::endl;
+		std::cout << "-threshold	Specify the threshold in nm for comparing references." << std::endl;
+		std::cout << "-compare	Take a measurement and output the closest matching reference entry." << std::endl;
+	}
+	else {
+		
+		std::cout << "Commands:" << std::endl;
+		std::cout << "read	Read in data from the spectrometer." << std::endl;
+		std::cout << "build	Compile all saved data into reference files." << std::endl;
+		std::cout << "subject	Specify the name of the subject." << std::endl;
+		std::cout << "wavelength	Specify what wavelength laser you are using." << std::endl;
+		std::cout << "threshold	Specify the threshold in nm for comparing references." << std::endl;
+		std::cout << "compare	Take in a reading and output the closest matching reference entry." << std::endl;
+		std::cout << "status	Get the status of how many spectrometers are connected, and its serial number." << std::endl;
+		std::cout << "quit	Exits the program." << std::endl;
+		std::cout << "help	Display a super helpful command menu (no need to thank me, just doing my job!)" << std::endl;
+		
+	}
+	
 }
