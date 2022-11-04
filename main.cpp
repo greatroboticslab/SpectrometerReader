@@ -81,6 +81,7 @@ int main(int argc, char **argv) {
 	unsigned int currentID = ReadID();
 	
 	DataList dataList;
+	dataList.ReadWaveValues();
 	DataReader dataReader;
 	
 	if(!LoadDLL()) {
@@ -165,6 +166,18 @@ int main(int argc, char **argv) {
 					std::cout << "Serial number: " << devices->R << std::endl;
 					
 				}
+				
+			}
+			else if(userInput == "csv") {
+				
+				std::string fname;
+				std::cout << "Please enter the name of the file to convert to csv: ";
+				std::cin >> fname;
+				DataReader reader;
+				MeasurementSaver saver;
+				MeasurementData* m = reader.ReadDataFile("Data/" + fname);
+				fname = fname.substr(0, fname.size()-4);
+				saver.SaveCSV(m, fname, true);
 				
 			}
 			//Debug read reference file
@@ -406,6 +419,7 @@ MeasurementData MakeReading(unsigned int &id, DataList &dataList, std::string su
 		if(save) {
 			MeasurementSaver measurementSaver;
 			measurementSaver.SaveMeasurement(mData, true);
+			measurementSaver.SaveCSV(&mData, "", false);
 		}
 		
 		id++;

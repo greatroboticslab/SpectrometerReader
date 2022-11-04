@@ -12,6 +12,7 @@ class MeasurementSaver {
 public:
 	void SaveMeasurement(MeasurementData, bool);
 	void SaveReference(ReferenceData);
+	void SaveCSV(MeasurementData*, std::string, bool);
 private:
 	uint8_t *bytes;
 	void BuildBytes(MeasurementData&, int, bool);

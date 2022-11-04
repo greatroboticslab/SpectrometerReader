@@ -6,14 +6,32 @@ DataList::DataList() {
 	
 }
 
+void DataList::ReadWaveValues() {
+	
+	std::ifstream inFile;
+	
+	waveValues = new float[WAVELENGTH_AMOUNT];
+	
+	inFile.open("wavelength.txt");
+	
+	for(int i = 0; i < WAVELENGTH_AMOUNT; i++) {
+		
+		inFile >> waveValues[i];
+		
+	}
+	
+	inFile.close();
+	
+}
+
 MeasurementData DataList::FormMeasurement(unsigned int id, float weight, std::string subject, std::string subtype, bool healthy) {
 	mDataBuffer.id = id;
 	mDataBuffer.weight = weight;
 	mDataBuffer.subject = subject;
 	mDataBuffer.subtype = subtype;
 	mDataBuffer.healthy = healthy;
-	
 	mDataBuffer.waves = waves;
+	mDataBuffer.waveCount = waveCount;
 	
 	return mDataBuffer;
 }
@@ -45,10 +63,11 @@ void DataList::ReadInPixels(uint16_t * pixels, uint16_t pixelAmount) {
 	
 	//Now read in the string data into wave nodes
 	
+	waveCount = pixelAmount;
 	waves = new WaveNode[pixelAmount];
 	for(int i = 0; i < pixelAmount; i++) {
 		WaveNode * newNode = new WaveNode;
-		newNode->wavelength = i;
+		newNode->wavelength = waveValues[i];
 		newNode->intensity = std::stof(stringList[i]);
 		waves[i] = (*newNode);
 	}

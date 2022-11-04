@@ -14,6 +14,7 @@ class DataList {
 public:
 	
 	DataList();
+	void ReadWaveValues();
 	void ReadInBytes(uint8_t * bytes);
 	void DisplayLines();
 	std::string GetLine(int);
@@ -24,8 +25,10 @@ public:
 private:
 	
 	std::string * stringList;
+	float * waveValues;
 	int numberOfLines;
 	WaveNode * waves;
+	int waveCount;
 	std::string subject, state;
 	MeasurementData mDataBuffer;
 	

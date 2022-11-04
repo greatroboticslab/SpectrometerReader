@@ -1,6 +1,46 @@
 #include "MeasurementSaver.h"
 #include <iostream>
 
+void MeasurementSaver::SaveCSV(MeasurementData *m, std::string name, bool fromFile) {
+	
+	std::ofstream outFile;
+	
+	if(fromFile) {
+		outFile.open("Data/"+name+".csv");
+	}
+	else {
+		std::string fileName;
+	
+		fileName = std::to_string(m->id);
+		fileName += "_" + m->subject + ".csv";
+		outFile.open("Data/"+fileName);
+	}
+	
+	outFile << "Subject,Subtype,Healthy,Sent Wavelength,Returned Wavelength,Returned Intensity\n";
+	
+	for(int i = 0; i < m->waveCount; i++) {
+		
+		std::string line = m->subject;
+		line += "," + m->subtype;
+		line += ",";
+		if(m->healthy) {
+			line+= "yes";
+		}
+		else {
+			line+= "no";
+		}
+		line += "," + std::to_string(m->weight);
+		line += "," + std::to_string(m->waves[i].wavelength);
+		line += "," + std::to_string(m->waves[i].intensity);
+		line += "\n";
+		outFile << line;
+		
+	}
+	
+	outFile.close();
+	
+}
+
 void MeasurementSaver::SaveMeasurement(MeasurementData mData, bool frameMode) {
 	
 	std::string fileName;
