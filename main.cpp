@@ -74,6 +74,8 @@ float currentWavelength, currentThreshold;
 bool deviceConnected = false;
 bool currentHealthy = false;
 
+bool saveBinary = true;
+
 void DisplayHelp(bool);
 
 int main(int argc, char **argv) {
@@ -270,6 +272,11 @@ int main(int argc, char **argv) {
 				compareData = true;
 				
 			}
+			else if(strcmp(argv[c], "-nobinary") == 0) {
+				
+				saveBinary = false;
+				
+			}
 			else {
 				
 				DisplayHelp(true);
@@ -418,7 +425,9 @@ MeasurementData MakeReading(unsigned int &id, DataList &dataList, std::string su
 		
 		if(save) {
 			MeasurementSaver measurementSaver;
-			measurementSaver.SaveMeasurement(mData, true);
+			if(saveBinary) {
+				measurementSaver.SaveMeasurement(mData, true);
+			}
 			measurementSaver.SaveCSV(&mData, "", false);
 		}
 		
