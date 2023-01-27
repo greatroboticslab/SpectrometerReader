@@ -75,6 +75,7 @@ bool deviceConnected = false;
 bool currentHealthy = false;
 
 bool saveBinary = true;
+bool readRaw = false;
 
 void DisplayHelp(bool);
 
@@ -179,7 +180,7 @@ int main(int argc, char **argv) {
 				MeasurementSaver saver;
 				MeasurementData* m = reader.ReadDataFile("Data/" + fname);
 				fname = fname.substr(0, fname.size()-4);
-				saver.SaveCSV(m, fname, true);
+				saver.SaveCSV(m, fname, true, false);
 				
 			}
 			//Debug read reference file
@@ -275,6 +276,13 @@ int main(int argc, char **argv) {
 			else if(strcmp(argv[c], "-nobinary") == 0) {
 				
 				saveBinary = false;
+				
+			}
+			else if(strcmp(argv[c], "-unknown") == 0) {
+				readRaw = true;
+				currentSubject = "unknown";
+				currentHealthy = false;
+				currentSubtype = "unknown";
 				
 			}
 			else {
@@ -428,7 +436,7 @@ MeasurementData MakeReading(unsigned int &id, DataList &dataList, std::string su
 			if(saveBinary) {
 				measurementSaver.SaveMeasurement(mData, true);
 			}
-			measurementSaver.SaveCSV(&mData, "", false);
+			measurementSaver.SaveCSV(&mData, "", false, readRaw);
 		}
 		
 		id++;

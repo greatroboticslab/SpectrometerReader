@@ -1,7 +1,7 @@
 #include "MeasurementSaver.h"
 #include <iostream>
 
-void MeasurementSaver::SaveCSV(MeasurementData *m, std::string name, bool fromFile) {
+void MeasurementSaver::SaveCSV(MeasurementData *m, std::string name, bool fromFile, bool rawmes) {
 	
 	std::ofstream outFile;
 	
@@ -10,9 +10,17 @@ void MeasurementSaver::SaveCSV(MeasurementData *m, std::string name, bool fromFi
 	}
 	else {
 		std::string fileName;
-	
-		fileName = std::to_string(m->id);
-		fileName += "_" + m->subject + ".csv";
+		
+		fileName = "";
+		if(!rawmes) {
+			fileName = std::to_string(m->id);
+			fileName += "_";
+			fileName += m->subject + ".csv";
+		}
+		else {
+			fileName = "spectrum.csv";
+		}
+		
 		outFile.open("Data/"+fileName);
 	}
 	
