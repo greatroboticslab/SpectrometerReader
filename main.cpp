@@ -56,7 +56,9 @@ void ReadData(uint8_t*);
 
 unsigned int ReadID();
 
-MeasurementData MakeReading(unsigned int &id, DataList &dataList, std::string subject, bool, bool);
+MeasurementData MakeReading(unsigned int &id, DataList &dataList, std::string subject, bool, bool, int);
+
+DataList ReadSpectrum;
 
 void SaveMeasurement(MeasurementData &mData, bool);
 
@@ -76,6 +78,8 @@ bool currentHealthy = false;
 
 bool saveBinary = true;
 bool readRaw = false;
+
+int readingLayers = 10; //Default is 10
 
 void DisplayHelp(bool);
 
@@ -118,7 +122,7 @@ int main(int argc, char **argv) {
 			if(userInput == "read") {
 				
 				if(DeviceCheck()) {
-					MakeReading(currentID, dataList, currentSubject, true, true);
+					MakeReading(currentID, dataList, currentSubject, true, true, readingLayers);
 					dataList.SaveRawData();
 				}
 				
@@ -131,7 +135,7 @@ int main(int argc, char **argv) {
 			//Make a reading and find the closest measurement
 			else if(userInput == "compare") {
 				if(DeviceCheck()) {
-					MeasurementData temp = MakeReading(currentID, dataList, "temp", false, false);
+					MeasurementData temp = MakeReading(currentID, dataList, "temp", false, false, readingLayers);
 					DataComparison comparitor;
 					comparitor.CompareData(temp, currentThreshold);
 				}
@@ -156,6 +160,13 @@ int main(int argc, char **argv) {
 				
 				std::cout << "Set threshold of wavelength (nm): ";
 				std::cin >> currentThreshold;
+				
+			}
+			//Set iterations per reading
+			else if(userInput == "iterations") {
+				
+				std::cout << "Set amount of iterations per reading: ";
+				std::cin >> readingLayers;
 				
 			}
 			else if(userInput == "status") {
@@ -285,6 +296,14 @@ int main(int argc, char **argv) {
 				currentSubtype = "unknown";
 				
 			}
+			
+			else if(strcmp(argv[c], "-iterations") == 0) {
+				
+				c++;
+				readingLayers = std::stoi(argv[c]);
+				
+			}
+			
 			else {
 				
 				DisplayHelp(true);
@@ -299,7 +318,7 @@ int main(int argc, char **argv) {
 		if(makeReading) {
 			
 			if(DeviceCheck()) {
-				MakeReading(currentID, dataList, currentSubject, false, true);
+				MakeReading(currentID, dataList, currentSubject, false, true, readingLayers);
 				dataList.SaveRawData();
 			}
 			
@@ -314,7 +333,7 @@ int main(int argc, char **argv) {
 		if(compareData) {
 			
 			if(DeviceCheck()) {
-				MeasurementData temp = MakeReading(currentID, dataList, "temp", false, false);
+				MeasurementData temp = MakeReading(currentID, dataList, "temp", false, false, readingLayers);
 				DataComparison comparitor;
 				comparitor.CompareData(temp, currentThreshold);
 			}
@@ -347,7 +366,8 @@ void SaveID(unsigned int id) {
 
 
 //Create new reading entry
-MeasurementData MakeReading(unsigned int &id, DataList &dataList, std::string subject,bool askForArgs, bool save) {
+//Result is then averaged by amount parameter
+MeasurementData MakeReading(unsigned int &id, DataList &dataList, std::string subject,bool askForArgs, bool save, int amount) {
 	
 	if(DeviceCheck()) {
 		
@@ -359,7 +379,7 @@ MeasurementData MakeReading(unsigned int &id, DataList &dataList, std::string su
 		
 		triggerAcquisition();
 		
-		Sleep(100);
+		Sleep(10);
 		
 		
 		
@@ -428,8 +448,40 @@ MeasurementData MakeReading(unsigned int &id, DataList &dataList, std::string su
 		}
 		
 		
+		MeasurementData mData;
+		//Average layers
+		for(int i = 0; i < amount; i++) {
+			if(i == 0) {
+				mData = (dataList.FormMeasurement(id, weight, subject, subtype, healthy));
+			}
+			else {
+				resetDevice();
+				
+				triggerAcquisition();
 		
-		MeasurementData mData = (dataList.FormMeasurement(id, weight, subject, subtype, healthy));
+				Sleep(10);
+				
+				getFrame(framePixelsBuffer, 0);
+				dataList.ReadInPixels(framePixelsBuffer, numOfPixelsInFrame);
+				
+				MeasurementData addData = (dataList.FormMeasurement(id, weight, subject, subtype, healthy));
+				
+				//Add waves
+				for(int w = 0; w < mData.waveCount; w++) {
+					
+					
+					
+					mData.waves[w].intensity += addData.waves[w].intensity;
+				}
+				
+			}
+			
+		}
+		
+		//Divide intensities
+		for(int w = 0; w < mData.waveCount; w++) {
+			mData.waves[w].intensity /= amount;
+		}
 		
 		if(save) {
 			MeasurementSaver measurementSaver;
