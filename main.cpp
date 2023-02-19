@@ -80,6 +80,7 @@ bool saveBinary = true;
 bool readRaw = false;
 
 int readingLayers = 10; //Default is 10
+bool applyBaseline = true;
 
 void DisplayHelp(bool);
 
@@ -481,6 +482,43 @@ MeasurementData MakeReading(unsigned int &id, DataList &dataList, std::string su
 		//Divide intensities
 		for(int w = 0; w < mData.waveCount; w++) {
 			mData.waves[w].intensity /= amount;
+		}
+		
+		//Apply baseline
+		if(applyBaseline) {
+			
+			float y1, y2;
+			
+			float sum = 0;
+			//Get first 16 pixels
+			for(int x = 0; x < 16; x++) {
+				sum += mData.waves[x].intensity;
+			}
+			y1 = sum/16;
+			
+			//Get last 14 pixels
+			sum = 0;
+			for(int x = 1; x < 15; x++) {
+				sum += mData.waves[mData.waveCount-x].intensity;
+			}
+			y2 = sum/14;
+			
+			//Apply it
+			
+			float slope = (y2-y1)/(mData.waveCount);
+			
+			float intercept = y2;
+			if(y1 < y2) {
+				intercept = y1;
+			}
+			
+			for(int x = 0; x < mData.waveCount; x++) {
+				mData.waves[x].intensity -= (intercept+(slope*x));
+				if(mData.waves[x].intensity < 0) {
+					mData.waves[x].intensity = 0;
+				}
+			}
+			
 		}
 		
 		if(save) {
