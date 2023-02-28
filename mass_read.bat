@@ -16,3 +16,17 @@ GOTO :EOF
 
 :FoundFile
 python Data\spectrograph_viewer.py Data\%NewestFile%
+echo 
+choice /C:YN /M "Keep this file? [Y/N]"
+IF ERRORLEVEL ==2 GOTO deleteFile
+IF ERRORLEVEL ==1 GOTO exeet
+
+GOTO FoundFile
+
+:deleteFile
+del /f Data\%NewestFile%
+
+:exeet
+GOTO next
+
+:next
