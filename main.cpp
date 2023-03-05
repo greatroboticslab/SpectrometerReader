@@ -48,6 +48,9 @@ _getFrameFormat getFrameFormat;
 typedef int (*_getFrame) (uint16_t*, const uint16_t);
 _getFrame getFrame;
 
+typedef int (*_setAcquisitionParameters) (const uint16_t, const uint16_t, const uint8_t, const uint32_t);
+_setAcquisitionParameters setAcquisitionParameters;
+
 HINSTANCE hinst;
 
 bool LoadDLL();
@@ -79,7 +82,7 @@ bool currentHealthy = false;
 bool saveBinary = true;
 bool readRaw = false;
 
-int readingLayers = 10; //Default is 10
+int readingLayers = 1; //Default is 10
 bool applyBaseline = true;
 
 void DisplayHelp(bool);
@@ -372,7 +375,11 @@ MeasurementData MakeReading(unsigned int &id, DataList &dataList, std::string su
 	
 	if(DeviceCheck()) {
 		
+		int numOfScans = 5;
+		
 		resetDevice();
+		
+		setAcquisitionParameters(numOfScans, 0, 3, 200);
 		
 		//clearMemory();
 		
@@ -380,7 +387,7 @@ MeasurementData MakeReading(unsigned int &id, DataList &dataList, std::string su
 		
 		triggerAcquisition();
 		
-		Sleep(10);
+		Sleep(500);
 		
 		
 		
@@ -391,7 +398,7 @@ MeasurementData MakeReading(unsigned int &id, DataList &dataList, std::string su
 		
 		
 		uint16_t * framePixelsBuffer = (uint16_t*)calloc(numOfPixelsInFrame, sizeof(uint16_t));
-		getFrame(framePixelsBuffer, 0);
+		getFrame(framePixelsBuffer, 0xFFFF);
 		
 		
 		//std::cout << "FRAME: " << numOfStartElement << ", " << numOfEndElement << ", " << numOfPixelsInFrame << std::endl;
@@ -676,6 +683,7 @@ bool LoadDLL() {
 	eraseFlash = (_eraseFlash)GetProcAddress(hinst, "eraseFlash");
 	getFrameFormat = (_getFrameFormat)GetProcAddress(hinst, "getFrameFormat");
 	getFrame = (_getFrame)GetProcAddress(hinst, "getFrame");
+	setAcquisitionParameters = (_setAcquisitionParameters)GetProcAddress(hinst, "setAcquisitionParameters");
 	
 	return true;
 }

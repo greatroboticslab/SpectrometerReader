@@ -3,7 +3,7 @@
 set loop=0
 :loop
 set /a loop=%loop%+1
-"Spectrometer Reader.exe" -subject soybean_leaf -subtype young -wavelength 0 -healthy yes -read -iterations 25 -nobinary
+"Spectrometer Reader.exe" -subject soybean_leaf -subtype young -wavelength 0 -healthy yes -read -iterations 1 -nobinary
 if "%loop%"=="1" goto end
 goto loop
 
