@@ -85,6 +85,8 @@ bool readRaw = false;
 int readingLayers = 1; //Default is 10
 bool applyBaseline = true;
 
+int exposureTime = 10;
+
 void DisplayHelp(bool);
 
 int main(int argc, char **argv) {
@@ -171,6 +173,13 @@ int main(int argc, char **argv) {
 				
 				std::cout << "Set amount of iterations per reading: ";
 				std::cin >> readingLayers;
+				
+			}
+			//Set exposure time (in 10s microseconds) per reading
+			else if(userInput == "exposuretime") {
+				
+				std::cout << "How long for each exposure (in 10s of microseconds): ";
+				std::cin >> exposureTime;
 				
 			}
 			else if(userInput == "status") {
@@ -307,6 +316,12 @@ int main(int argc, char **argv) {
 				readingLayers = std::stoi(argv[c]);
 				
 			}
+			else if(strcmp(argv[c], "-exposuretime") == 0) {
+				
+				c++;
+				exposureTime = std::stoi(argv[c]);
+				
+			}
 			
 			else {
 				
@@ -379,7 +394,7 @@ MeasurementData MakeReading(unsigned int &id, DataList &dataList, std::string su
 		
 		resetDevice();
 		
-		setAcquisitionParameters(numOfScans, 0, 3, 200);
+		setAcquisitionParameters(numOfScans, 0, 3, exposureTime);
 		
 		//clearMemory();
 		
