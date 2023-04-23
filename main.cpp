@@ -402,7 +402,7 @@ MeasurementData MakeReading(unsigned int &id, DataList &dataList, std::string su
 		
 		triggerAcquisition();
 		
-		Sleep(500);
+		Sleep(exposureTime/2);
 		
 		
 		
