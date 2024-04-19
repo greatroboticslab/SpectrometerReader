@@ -45,3 +45,4 @@ Readings are saved in the Data folder as a .csv file. You can view the readings 
 
 - Make sure the ASEQ spectrometer is plugged into the computer, and that the required .dll is in the same directory as the executable.
 - Make sure you enter the arguments correctly as defined in the Single Read section.
+- You can run just the command "Spectrometer Reader.exe" and type help for a list of commands. This was the old way of running the program and is deprecated, but if you type status in this mode it will show if a spectrometer is connected and recognized.
